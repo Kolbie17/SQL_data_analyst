@@ -1,0 +1,123 @@
+BULK INSERT — это оператор T-SQL, позволяющий быстро импортировать большой объем данных из файла во внешнем хранилище (например, .txt, .csv) в таблицу SQL Server.
+
+BULK INSERT имя_таблицы
+FROM 'путь_к_файлу'
+WITH (
+    FIELDTERMINATOR = 'разделитель_полей',
+    ROWTERMINATOR = 'разделитель_строк',
+    FIRSTROW = N
+);
+CSV (Comma-Separated Values / значения, разделённые запятыми)
+
+Один из самых популярных форматов экспорта данных (например, из Excel).
+
+Легко импортируется с помощью BULK INSERT, bcp или OPENROWSET.
+
+TXT (Текстовый файл)
+
+Простой текстовый файл с данными, разделёнными символами (табуляция, |, ; и др.).
+
+Часто используется для импорта через BULK INSERT.
+
+XML (eXtensible Markup Language)
+
+Применяется для хранения и передачи структурированных данных.
+
+Импорт осуществляется с помощью OPENXML, типа данных xml, или через SSIS.
+
+JSON (JavaScript Object Notation)
+
+Лёгкий текстовый формат для обмена данными.
+
+SQL Server поддерживает импорт через OPENJSON, JSON_VALUE и JSON_QUERY.
+
+CREATE TABLE Products (
+    ProductID INT PRIMARY KEY,
+    ProductName VARCHAR(50),
+    Price DECIMAL(10,2)
+);
+
+INSERT INTO Products (ProductID, ProductName, Price)
+VALUES
+    (1, 'Laptop', 999.99),
+    (2, 'Smartphone', 599.49),
+    (3, 'Headphones', 149.95);
+
+
+ В эту колонку можно не вставлять значение — она примет NULL.
+Нельзя вставить строку без имени продукта — SQL Server выдаст ошибку.
+
+
+ALTER TABLE Products
+ADD CONSTRAINT UQ_ProductName UNIQUE (ProductName);
+
+
+INSERT INTO Products (ProductID, ProductName, Price)
+VALUES (4, 'Tablet', 299.99);
+
+
+ALTER TABLE Products
+ADD CategoryID INT;
+
+CREATE TABLE Categories (
+    CategoryID INT PRIMARY KEY,
+    CategoryName VARCHAR(50) UNIQUE
+);
+
+IDENTITY — это свойство столбца, которое автоматически генерирует уникальные числовые значения при добавлении новых строк в таблицу.
+
+
+
+BULK INSERT Products
+FROM 'C:\Data\products.txt'
+WITH (
+    FIELDTERMINATOR = ',',      -- разделитель полей (например, запятая)
+    ROWTERMINATOR = '\n',       -- разделитель строк (перевод строки)
+    FIRSTROW = 2                -- начать с 2-й строки (если первая — заголовок)
+);
+
+
+ALTER TABLE Products
+ADD CONSTRAINT FK_Products_Categories
+FOREIGN KEY (CategoryID) REFERENCES Categories(CategoryID);
+
+
+PRIMARY KEY — уникальный идентификатор записи, обязателен и не может быть пустым.
+
+UNIQUE KEY — просто гарантирует уникальность значения, допускает NULL, и таких ограничений может быть несколько.
+
+
+ALTER TABLE Products
+ADD CONSTRAINT CHK_Price_Positive
+CHECK (Price > 0);
+
+
+ALTER TABLE Products
+ADD Stock INT NOT NULL DEFAULT 0;
+
+
+SELECT
+    ProductID,
+    ProductName,
+    ISNULL(Price, 0) AS Price
+FROM Products;
+
+FOREIGN KEY (внешний ключ) — это ограничение, которое связывает столбец (или несколько столбцов) одной таблицы с первичным ключом (PRIMARY KEY) или уникальным ключом (UNIQUE) другой таблицы.
+
+ALTER TABLE Products
+ADD CONSTRAINT FK_Products_Categories
+FOREIGN KEY (CategoryID) REFERENCES Categories(CategoryID);
+
+
+
+CREATE TABLE Customers (
+    CustomerID INT PRIMARY KEY IDENTITY(1,1),
+    CustomerName VARCHAR(100) NOT NULL,
+    Age INT NOT NULL,
+    CONSTRAINT CHK_Age_Adult CHECK (Age >= 18)
+);
+
+CREATE TABLE ExampleTable (
+    ID INT IDENTITY(100, 10) PRIMARY KEY,
+    SomeData VARCHAR(50)
+);
